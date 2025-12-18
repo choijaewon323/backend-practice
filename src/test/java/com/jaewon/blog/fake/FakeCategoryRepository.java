@@ -4,35 +4,47 @@ import com.jaewon.blog.entity.Category;
 import com.jaewon.blog.repository.CategoryRepository;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class FakeCategoryRepository implements CategoryRepository {
-    public static Map<Long, Category> MAP = new HashMap<>();
-    public static long SEQUENCE = 0L;
+    public final Map<Long, Category> map = new ConcurrentHashMap<>();
+    private final AtomicLong sequence = new AtomicLong(0L);
 
     @Override
     public Mono<Long> findIdByName(String name) {
-        Optional<Long> id = MAP.values().stream()
+        return Mono.fromCallable(() -> map.values().stream()
                 .filter(category -> category.getName().equals(name))
                 .map(Category::getId)
-                .findFirst();
-
-        return Mono.justOrEmpty(id);
+                .findFirst())
+                .flatMap(Mono::justOrEmpty);
     }
 
     @Override
     public Mono<Category> findById(Long categoryId) {
-        return Mono.justOrEmpty(MAP.get(categoryId));
+        return Mono.fromCallable(() -> Optional.ofNullable(map.get(categoryId)))
+                .flatMap(Mono::justOrEmpty);
     }
 
     @Override
     public Mono<Category> save(Category category) {
-        Category newCategory = new Category(SEQUENCE, category.getName(), null);
+        return Mono.fromCallable(() -> {
+            if (category.getId() != null && map.containsKey(category.getId())) {
+                map.put(category.getId(), category);
+                return category;
+            }
 
-        MAP.put(SEQUENCE++, newCategory);
+            long id = sequence.getAndIncrement();
+            Category newCategory = new Category(id, category.getName(), null);
+            map.put(id, newCategory);
 
-        return Mono.just(newCategory);
+            return newCategory;
+        });
+    }
+
+    public Mono<Void> deleteAll() {
+        return Mono.fromRunnable(map::clear);
     }
 }

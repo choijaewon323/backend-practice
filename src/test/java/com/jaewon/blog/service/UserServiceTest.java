@@ -2,6 +2,7 @@ package com.jaewon.blog.service;
 
 import com.jaewon.blog.entity.User;
 import com.jaewon.blog.fake.FakeUserRepository;
+import com.jaewon.blog.service.user.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -15,14 +16,13 @@ class UserServiceTest {
 
     @AfterEach
     void after() {
-        FakeUserRepository.MAP.clear();
+        fakeUserRepository.map.clear();
     }
 
     @Test
-    void test() {
-        fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"));
-
-        Mono<Boolean> result = userService.createUser("test email", "password", "nickname");
+    void createUser_이미존재하는이메일이면false() {
+        Mono<Boolean> result = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
+                .then(userService.createUser("test email", "password", "nickname"));
 
         StepVerifier.create(result)
                 .assertNext(res -> {
@@ -32,7 +32,7 @@ class UserServiceTest {
     }
 
     @Test
-    void test2() {
+    void createUser_이미존재하는닉네임이면false() {
         Mono<Boolean> then = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
                 .then(userService.createUser("email", "password", "test nickname"));
 
@@ -44,10 +44,9 @@ class UserServiceTest {
     }
 
     @Test
-    void test3() {
-        fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"));
-
-        Mono<Boolean> result = userService.createUser("email", "password", "nickname");
+    void createUser_성공테스트() {
+        Mono<Boolean> result = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
+                .then(userService.createUser("email", "password", "nickname"));
 
         StepVerifier.create(result)
                 .assertNext(res -> {
@@ -57,23 +56,9 @@ class UserServiceTest {
     }
 
     @Test
-    void test4() {
-        fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"));
-
-        Mono<Boolean> booleanMono = userService.updatePassword("email", "test password", "test nickname");
-
-        StepVerifier.create(booleanMono)
-                .assertNext(res -> {
-                    assertThat(res).isFalse();
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void test5() {
-        fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"));
-
-        Mono<Boolean> booleanMono = userService.updatePassword("test email", "password", "test password");
+    void updatePassword_존재하는이메일이없으면false() {
+        Mono<Boolean> booleanMono = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
+                .then(userService.updatePassword("email", "test password", "test nickname"));
 
         StepVerifier.create(booleanMono)
                 .assertNext(res -> {
@@ -83,10 +68,9 @@ class UserServiceTest {
     }
 
     @Test
-    void test6() {
-        fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"));
-
-        Mono<Boolean> booleanMono = userService.updatePassword("test email", "test password", "test password");
+    void updatePassword_기존패스워드와다르면false() {
+        Mono<Boolean> booleanMono = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
+                .then(userService.updatePassword("test email", "password", "test password"));
 
         StepVerifier.create(booleanMono)
                 .assertNext(res -> {
@@ -96,28 +80,26 @@ class UserServiceTest {
     }
 
     @Test
-    void test7() {
-        fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"));
+    void updatePassword_기존패스워드와바꿀패스워드가같으면false() {
+        Mono<Boolean> booleanMono = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
+                .then(userService.updatePassword("test email", "test password", "test password"));
 
-        Mono<Boolean> booleanMono = userService.updatePassword("test email", "test password", "asdf");
+        StepVerifier.create(booleanMono)
+                .assertNext(res -> {
+                    assertThat(res).isFalse();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updatePassword_성공테스트() {
+        Mono<Boolean> booleanMono = fakeUserRepository.save(User.newUser("test email", "test password", "test nickname"))
+                .then(userService.updatePassword("test email", "test password", "asdf"));
 
         StepVerifier.create(booleanMono)
                 .assertNext(res -> {
                     assertThat(res).isTrue();
                 })
                 .verifyComplete();
-    }
-
-    @Test
-    void test8() {
-        Mono<Long> result = fakeUserRepository.save(User.newUser("email", "password", "nickname"))
-                .then(userService.getUserIdFromEmail("emailasd"));
-
-        StepVerifier.create(result)
-                .expectErrorSatisfies(error -> {
-                    assertThat(error).isInstanceOf(IllegalArgumentException.class);
-                    assertThat(error.getMessage()).isEqualTo("해당 닉네임의 유저가 없습니다.");
-                })
-                .verify();
     }
 }

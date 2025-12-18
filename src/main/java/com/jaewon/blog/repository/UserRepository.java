@@ -13,4 +13,6 @@ public interface UserRepository {
     Mono<User> findByEmail(String email);
 
     Mono<User> findById(Long userId);
+
+    Mono<Void> deleteById(Long userId);
 }

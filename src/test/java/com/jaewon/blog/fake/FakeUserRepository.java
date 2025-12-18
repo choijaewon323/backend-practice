@@ -4,50 +4,62 @@ import com.jaewon.blog.entity.User;
 import com.jaewon.blog.repository.UserRepository;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class FakeUserRepository implements UserRepository {
-    public static Map<Long, User> MAP = new HashMap<>();
-    private static long sequence = 0L;
+    public final Map<Long, User> map = new ConcurrentHashMap<>();
+    private final AtomicLong sequence = new AtomicLong(0L);
 
     @Override
     public Mono<Long> findIdByEmail(String email) {
         return findByEmail(email)
-                .map(user -> user.getId());
+                .map(User::getId);
     }
 
     @Override
     public Mono<Long> findIdByNickname(String nickname) {
-        Optional<Long> first = MAP.values().stream()
+        return Mono.fromCallable(() -> map.values().stream()
                 .filter(user -> user.getNickname().equals(nickname))
-                .map(user -> user.getId())
-                .findFirst();
-
-        return Mono.justOrEmpty(first);
+                .map(User::getId)
+                .findFirst())
+                .flatMap(Mono::justOrEmpty);
     }
 
     @Override
-    public Mono<User> save(User newUser) {
-        User user = new User(sequence, newUser.getEmail(), newUser.getPassword(), newUser.getNickname(), null);
+    public Mono<User> save(User user) {
+        return Mono.fromCallable(() -> {
+            if (user.getId() != null && map.containsKey(user.getId())) {
+                map.put(user.getId(), user);
 
-        MAP.put(sequence++, user);
+                return user;
+            }
 
-        return Mono.just(user);
+            User save = new User(sequence.get(), user.getEmail(), user.getPassword(), user.getNickname(), null);
+            map.put(sequence.getAndIncrement(), save);
+
+            return save;
+        });
     }
 
     @Override
     public Mono<User> findByEmail(String email) {
-        Optional<User> userOptional = MAP.values().stream()
+        return Mono.fromCallable(() -> map.values().stream()
                 .filter(user -> user.getEmail().equals(email))
-                .findFirst();
-
-        return Mono.justOrEmpty(userOptional);
+                .findFirst())
+                .flatMap(Mono::justOrEmpty);
     }
 
     @Override
     public Mono<User> findById(Long userId) {
-        return Mono.justOrEmpty(MAP.get(userId));
+        return Mono.fromCallable(() -> Optional.ofNullable(map.get(userId)))
+                .flatMap(Mono::justOrEmpty);
+    }
+
+    @Override
+    public Mono<Void> deleteById(Long userId) {
+        return Mono.fromRunnable(() -> map.remove(userId));
     }
 }

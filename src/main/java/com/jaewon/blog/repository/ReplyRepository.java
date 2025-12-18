@@ -1,10 +1,12 @@
 package com.jaewon.blog.repository;
 
 import com.jaewon.blog.entity.reply.Reply;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
-public interface ReplyRepository extends ReactiveCrudRepository<Reply, Long> {
+public interface ReplyRepository {
     Mono<Void> deleteAllByUserId(Long userId);
     Mono<Void> deleteAllByPostId(Long postId);
+    Mono<Reply> save(Reply reply);
+    Mono<Void> deleteById(Long replyId);
+    Mono<Reply> findById(long replyId);
 }

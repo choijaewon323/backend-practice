@@ -17,19 +17,16 @@ class CategoryServiceTest {
 
     @AfterEach
     void after() {
-        FakeCategoryRepository.MAP.clear();
+        fakeCategoryRepository.deleteAll()
+                .block();
     }
 
     @Test
-    void test() {
-        // given
-        FakeCategoryRepository.MAP.put(0L, new Category(0L, "test name", null));
+    void findCategoryIdFromName_성공_테스트() {
+        Mono<Long> result = fakeCategoryRepository.save(new Category(0L, "test name", null))
+                .then(categoryService.findCategoryIdFromName("test name"));
 
-        // when
-        Mono<Long> id = categoryService.findCategoryIdFromName("test name");
-
-        // then
-        StepVerifier.create(id)
+        StepVerifier.create(result)
                 .assertNext(categoryId -> {
                     assertThat(categoryId).isZero();
                 })
@@ -37,12 +34,11 @@ class CategoryServiceTest {
     }
 
     @Test
-    void test2() {
-        FakeCategoryRepository.MAP.put(0L, new Category(0L, "test name", null));
+    void getCategoryNameFromId_성공테스트() {
+        Mono<String> result = Mono.fromRunnable(() -> fakeCategoryRepository.map.put(0L, new Category(0L, "test name", null)))
+                .then(categoryService.getCategoryNameFromId(0L));
 
-        Mono<String> categoryName = categoryService.getCategoryNameFromId(0L);
-
-        StepVerifier.create(categoryName)
+        StepVerifier.create(result)
                 .assertNext(name -> {
                     assertThat(name).isEqualTo("test name");
                 })
@@ -50,7 +46,7 @@ class CategoryServiceTest {
     }
 
     @Test
-    void test3() {
+    void createCategory_중복_이름_생성시_에러() {
         Mono<Void> result = fakeCategoryRepository.save(Category.newCategory("name"))
                 .then(categoryService.createCategory("name"));
 
@@ -62,14 +58,14 @@ class CategoryServiceTest {
     }
 
     @Test
-    void test4() {
+    void createCategory_성공_테스트() {
         Mono<Void> result = fakeCategoryRepository.save(Category.newCategory("name"))
                 .then(categoryService.createCategory("newName"));
 
         StepVerifier.create(result)
                 .verifyComplete();
 
-        Optional<Category> newName = FakeCategoryRepository.MAP.values().stream()
+        Optional<Category> newName = fakeCategoryRepository.map.values().stream()
                 .filter(category -> category.getName().equals("newName"))
                 .findFirst();
 

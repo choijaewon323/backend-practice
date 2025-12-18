@@ -15,11 +15,11 @@ class LoginServiceTest {
 
     @AfterEach
     void after() {
-        FakeUserRepository.MAP.clear();
+        fakeUserRepository.map.clear();
     }
 
     @Test
-    void test() {
+    void login_계정없을시false() {
         Mono<Boolean> loginMono = loginService.login("email", "password");
 
         StepVerifier.create(loginMono)
@@ -30,7 +30,7 @@ class LoginServiceTest {
     }
 
     @Test
-    void test2() {
+    void login_이미존재하는이메일이있으면false() {
         Mono<Boolean> result = fakeUserRepository.save(User.newUser("email", "password", "nickname"))
                 .then(loginService.login("email", "password1"));
 
@@ -42,7 +42,7 @@ class LoginServiceTest {
     }
 
     @Test
-    void test3() {
+    void login_성공테스트() {
         Mono<Boolean> result = fakeUserRepository.save(User.newUser("email", "password", "nickname"))
                 .then(loginService.login("email", "password"));
 

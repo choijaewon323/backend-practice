@@ -10,7 +10,7 @@ import org.springframework.data.annotation.Id;
 import java.time.LocalDateTime;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Like {
     @Id

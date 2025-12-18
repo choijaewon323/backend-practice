@@ -4,7 +4,7 @@ import com.jaewon.blog.repository.PostRepository;
 import com.jaewon.blog.service.CategoryService;
 import com.jaewon.blog.service.PostTagMappingService;
 import com.jaewon.blog.service.TagService;
-import com.jaewon.blog.service.UserService;
+import com.jaewon.blog.service.user.UserQueryService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class PostQueryService {
     private final TagService tagService;
     private final PostTagMappingService postTagMappingService;
     private final CategoryService categoryService;
-    private final UserService userService;
+    private final UserQueryService userQueryService;
 
     public Mono<PostDetailResponse> getPostDetail(Long postId) {
         return postRepository.findById(postId)
@@ -31,7 +31,7 @@ public class PostQueryService {
                                 .collectList()
                                 .flatMap(tagIds -> tagService.getTagNamesFromTagId(tagIds)
                                         .collectList()),
-                        userService.getNicknameFromUserId(post.getUserId()),
+                        userQueryService.getNicknameById(post.getUserId()),
                         categoryService.getCategoryNameFromId(post.getCategoryId())
                 ).map(tuple -> {
                     List<String> tagNames = tuple.getT1();

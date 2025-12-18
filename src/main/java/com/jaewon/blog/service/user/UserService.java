@@ -1,7 +1,6 @@
-package com.jaewon.blog.service;
+package com.jaewon.blog.service.user;
 
 import com.jaewon.blog.entity.User;
-import com.jaewon.blog.infra.UserJpaRepository;
 import com.jaewon.blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,11 +10,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
-    public Mono<Long> getUserIdFromEmail(String email) {
-        return userRepository.findIdByEmail(email)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("해당 닉네임의 유저가 없습니다.")));
-    }
 
     public Mono<Boolean> createUser(String email, String password, String nickname) {
         return userRepository.findIdByEmail(email)
@@ -49,21 +43,5 @@ public class UserService {
                 })
                 .thenReturn(true)
                 .onErrorReturn(false);
-    }
-
-    public Mono<Void> updateNickname(String email, String newNickname) {
-        return userRepository.findByEmail(email)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("해당 유저가 없습니다")))
-                .flatMap(user -> {
-                    user.updateNickname(newNickname);
-
-                    return userRepository.save(user);
-                })
-                .then();
-    }
-
-    public Mono<String> getNicknameFromUserId(Long userId) {
-        return userRepository.findById(userId)
-                .map(User::getNickname);
     }
 }

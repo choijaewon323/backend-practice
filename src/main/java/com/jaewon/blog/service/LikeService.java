@@ -13,7 +13,7 @@ public class LikeService {
     private final LikeRepository likeRepository;
 
     public Mono<Void> likePost(Long userId, Long postId) {
-        return likeRepository.findByTargetIdAndType(postId, LikeType.POST)
+        return likeRepository.findByUserIdAndTargetIdAndType(userId, postId, LikeType.POST)
                 .flatMap(like -> {
                     like.like();
 
@@ -27,8 +27,8 @@ public class LikeService {
                 .then();
     }
 
-    public Mono<Void> dislikePost(Long postId) {
-        return likeRepository.findByTargetIdAndType(postId, LikeType.POST)
+    public Mono<Void> dislikePost(Long userId, Long postId) {
+        return likeRepository.findByUserIdAndTargetIdAndType(userId, postId, LikeType.POST)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("해당 게시글 좋아요 취소에 실패했습니다")))
                 .flatMap(like -> {
                     like.dislike();
@@ -38,7 +38,7 @@ public class LikeService {
     }
 
     public Mono<Void> likeReply(Long userId, Long replyId) {
-        return likeRepository.findByTargetIdAndType(replyId, LikeType.REPLY)
+        return likeRepository.findByUserIdAndTargetIdAndType(userId, replyId, LikeType.REPLY)
                 .flatMap(like -> {
                     like.like();
 
@@ -52,8 +52,8 @@ public class LikeService {
                 .then();
     }
 
-    public Mono<Void> dislikeReply(Long replyId) {
-        return likeRepository.findByTargetIdAndType(replyId, LikeType.REPLY)
+    public Mono<Void> dislikeReply(Long userId, Long replyId) {
+        return likeRepository.findByUserIdAndTargetIdAndType(userId, replyId, LikeType.REPLY)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("해당 댓글 좋아요 취소에 실패했습니다")))
                 .flatMap(like -> {
                     like.dislike();

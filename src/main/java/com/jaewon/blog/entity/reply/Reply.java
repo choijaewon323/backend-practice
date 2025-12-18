@@ -8,11 +8,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reply {
     @Id
@@ -30,10 +28,15 @@ public class Reply {
         return new Reply(null, content, userId, postId, ReplyState.NORMAL, null);
     }
 
-    public boolean isBanned() {
-        return state == ReplyState.BAN;
+    public boolean isBannedLimit(int reportedCount) {
+        return reportedCount > 500;
     }
 
-    public void report(Long reportId) {
+    public void ban() {
+        this.state = ReplyState.BAN;
+    }
+
+    public boolean isBanned() {
+        return state == ReplyState.BAN;
     }
 }

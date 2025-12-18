@@ -1,12 +1,17 @@
 package com.jaewon.blog.entity.report;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Report {
+    @Id
     private Long id;
 
     private Long targetId;
@@ -17,7 +22,7 @@ public class Report {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    private Report(Long id, Long targetId, Long reporterId, String content, ReportType type, LocalDateTime createdAt) {
+    public Report(Long id, Long targetId, Long reporterId, String content, ReportType type, LocalDateTime createdAt) {
         this.id = id;
         this.targetId = targetId;
         this.reporterId = reporterId;

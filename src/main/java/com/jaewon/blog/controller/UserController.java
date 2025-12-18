@@ -1,8 +1,8 @@
 package com.jaewon.blog.controller;
 
 import com.jaewon.blog.common.CommonResponse;
-import com.jaewon.blog.service.UserDeleteService;
-import com.jaewon.blog.service.UserService;
+import com.jaewon.blog.service.user.UserDeleteService;
+import com.jaewon.blog.service.user.UserService;
 import com.jaewon.blog.util.StringValidationUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,7 +35,9 @@ public class UserController {
     public Mono<CommonResponse<Boolean>> deleteUser(@PathVariable String email) {
         return userDeleteService.deleteUserAndBoardsAndReplies(email)
                 .doFirst(() -> StringValidationUtil.checkStringEmpty(email, "email"))
-                .map(CommonResponse::success);
+                .thenReturn(true)
+                .map(CommonResponse::success)
+                .onErrorReturn(CommonResponse.fail(false));
     }
 
     @Getter

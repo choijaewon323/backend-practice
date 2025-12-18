@@ -8,8 +8,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,7 +25,7 @@ public class Post {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    private Post(Long id, String title, String content, Long userId, Long categoryId, LocalDateTime createdAt) {
+    public Post(Long id, String title, String content, Long userId, Long categoryId, LocalDateTime createdAt) {
         checkTitleUnder50(title);
 
         this.id = id;
@@ -46,8 +44,12 @@ public class Post {
         return new Post(null, title, content, userId, categoryId, null);
     }
 
-    public void banPost() {
+    public void ban() {
         this.state = PostState.BAN;
+    }
+
+    public boolean isBannedLimit(int reportedCount) {
+        return reportedCount > 500;
     }
 
     public boolean isBanned() {

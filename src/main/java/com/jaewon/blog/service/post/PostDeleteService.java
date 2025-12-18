@@ -12,23 +12,20 @@ public class PostDeleteService {
     private final PostRepository postRepository;
     private final ReplyService replyService;
 
-    public Mono<Boolean> deletePostAndReplies(Long postId) {
+    public Mono<Void> deletePostAndReplies(Long postId) {
         return postRepository.deleteById(postId)
                 .then(replyService.deleteAllRepliesByPostId(postId))
                 .flatMap(isReplyDeletionSuccess -> {
-                    if (!isReplyDeletionSuccess) {
+                    if (Boolean.FALSE.equals(isReplyDeletionSuccess)) {
                         return Mono.error(new IllegalStateException("게시글 삭제 중 오류가 발생했습니다"));
                     }
 
-                    return Mono.just(true);
-                })
-                .onErrorReturn(false);
+                    return Mono.empty();
+                });
     }
 
-    public Mono<Boolean> deleteAllPostAndRepliesByUserId(Long userId) {
+    public Mono<Void> deleteAllPostAndRepliesByUserId(Long userId) {
         return postRepository.deleteAllByUserId(userId)
-                .then(replyService.deleteAllRepliesByUserId(userId))
-                .thenReturn(true)
-                .onErrorReturn(false);
+                .then(replyService.deleteAllRepliesByUserId(userId));
     }
 }
